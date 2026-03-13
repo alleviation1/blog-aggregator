@@ -61,12 +61,16 @@ func write(c *Config) error {
 		return err
 	}
 
-	os.Create(configFilePath)
-	json := "{\n\t\"db_url\": \"" + c.Url + "\",\n\t\"current_user_name\": " + "\"" + c.User + "\"\n}"
-
-	os.WriteFile(configFilePath, []byte(json), 0666)
+	file, err := os.Create(configFilePath)
 	if err != nil {
-		return fmt.Errorf("Error writing to file: %w", err)
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(c)
+	if err != nil {
+		return err
 	}
 
 	return nil
