@@ -13,8 +13,8 @@ type Config struct {
 	User string	`json:"current_user_name"`
 }
 
-func (c *Config) SetUser(username string) error {
 
+func (c *Config) SetUser(username string) error {
 	c.User = username
 	return write(c)
 }
