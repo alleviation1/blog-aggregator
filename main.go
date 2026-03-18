@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-
+	"database/sql"
+	"log"
+	
+	_ "github.com/lib/pq"
 	"github.com/alleviation1/blog_aggregator/internal/config"
+	"github.com/alleviation1/blog_aggregator/internal/database"
 )
 
 const configFileName = "/gatorconfig.json"
@@ -12,37 +15,31 @@ const configFileName = "/gatorconfig.json"
 func main() {
 	cfg, err := config.Read(configFileName)
 	if err != nil {
-		fmt.Errorf("Error creating config: %w", err)
-		return
-	}
-	fmt.Printf("Config before operations: %+v\n", cfg)
-
-
-	if len(os.Args) < 2 {
-		fmt.Println("Program requires at least 2 arguments")
-		os.Exit(1)
+		log.Fatalf("Error creating config: %w", err)
 	}
 
-	args := os.Args[1:]
-	if len(args) < 2 {
-		fmt.Println("Login requires a username to be passed")
-		os.Exit(1)
-	}
+	s := &state{config: &cfg}
 
-	s := state{config: &cfg}
+	db, err := sql.Open("postgres", s.config.Url)
+	defer db.Close()
+	s.db = database.New(db)
 
 	c := commands{commands: make(map[string]func(*state, command) error)}
+	c.register("login", handlerLogin)
+	c.register("register", handlerRegister)
+	c.register("reset", handlerReset)
+	c.register("users", handlerGetUsers)
 
-	login := command{
-		name: args[0],
-		args: args[1:],
+	if len(os.Args) < 2 {
+		log.Fatalf("Expected at least 2 arguments")
 	}
 
-	c.register(login.name, handlerLogin)
+	cmdName := os.Args[1]
+	cmdArgs := os.Args[2:]
 
-	if err := c.run(&s, login); err != nil {
-		fmt.Printf("Error running function: %w", err)
-		return
+
+	if err := c.run(s, command{name: cmdName, args: cmdArgs}); err != nil {
+		log.Fatalf("Error: %w", err)
 	}
 
 }
