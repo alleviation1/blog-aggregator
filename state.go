@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 	"context"
+	"html"
 
 	"github.com/google/uuid"
 	"github.com/alleviation1/blog_aggregator/internal/config"
@@ -116,5 +117,28 @@ func handlerGetUsers(s* state, cmd command) error {
 			fmt.Printf("* %s\n", user.Name)
 		}
 	}
+	return nil
+}
+
+func handlerAggregate(s* state, cmd command) error {
+	feed, err := fetchFeeds(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+
+		feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
+		feed.Channel.Link = html.UnescapeString(feed.Channel.Link)
+		feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
+
+		for i, item := range feed.Channel.Item {
+			item.Title = html.UnescapeString(item.Title)
+			item.Link = html.UnescapeString(item.Link)
+			item.Description = html.UnescapeString(item.Description)
+			item.PubDate = html.UnescapeString(item.PubDate)
+			feed.Channel.Item[i] = item
+		}
+
+		fmt.Printf("Feed: %+v\n", *feed)
+
 	return nil
 }

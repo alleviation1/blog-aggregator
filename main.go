@@ -29,6 +29,7 @@ func main() {
 	c.register("register", handlerRegister)
 	c.register("reset", handlerReset)
 	c.register("users", handlerGetUsers)
+	c.register("agg", handlerAggregate)
 
 	if len(os.Args) < 2 {
 		log.Fatalf("Expected at least 2 arguments")
