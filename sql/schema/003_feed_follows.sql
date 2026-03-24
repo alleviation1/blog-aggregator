@@ -1,0 +1,24 @@
+-- +goose Up
+CREATE TABLE feeds_follows (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at  TIMESTAMP NOT NULL,
+    updated_at  TIMESTAMP NOT NULL,
+    user_id     UUID NOT NULL,
+    feed_id     UUID NOT NULL,
+    UNIQUE (user_id, feed_id),
+
+    CONSTRAINT fk_user_id
+     FOREIGN KEY(user_id)
+     REFERENCES users(id)
+     ON UPDATE CASCADE
+     ON DELETE CASCADE,
+
+    CONSTRAINT fk_feed_id
+     FOREIGN KEY (feed_id)
+     REFERENCES feeds(id)
+     ON UPDATE CASCADE
+     ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE feeds_follows;
